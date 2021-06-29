@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Songify.Simple</name>
+    </assembly>
+    <members>
+        <member name="M:Songify.Simple.Controllers.ArtistController.Create(Songify.Simple.Dtos.CreateArtistResource)">
+            <summary>
+            Creates an Artist resource
+            </summary>
+            <param name="request">Http request</param>
+            <returns>Created Artist entity</returns>
+            <response code="201">Created Artist entity</response>
+        </member>
+        <member name="M:Songify.Simple.Controllers.ArtistController.Get(System.Int32)">
+            <summary>
+            Gets a specific artist
+            </summary>
+            <param name="id">Artist's id</param>
+            <returns>Existing Artist entity</returns>
+            <response code="200">Returns existing Artist entity</response>
+        </member>
+        <member name="M:Songify.Simple.Controllers.ArtistController.Remove(System.Int32)">
+            <summary>
+            Removes existing Artist entity
+            </summary>
+            <param name="id">Artist's id</param>
+            <returns>No content response status</returns>
+            <response code="204">Request processed - status No content</response>
+        </member>
+        <member name="M:Songify.Simple.Controllers.ArtistController.Update(Songify.Simple.Dtos.UpdateArtistResource)">
+            <summary>
+            Updates existing Artist entity
+            </summary>
+            <param name="request">Http request</param>
+            <returns>OK response status</returns>
+            <response code="200">Request processed - status OK</response>
+        </member>
+    </members>
+</doc>

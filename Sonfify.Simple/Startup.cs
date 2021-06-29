@@ -1,3 +1,6 @@
+using System;
+using System.IO;
+using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
@@ -49,7 +52,23 @@ namespace Songify.Simple
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Songify.Simple", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "Songify.Simple", 
+                    Version = "v1",
+                    Description = "Dokumentacja api Songify",
+                    TermsOfService = new Uri("https://songify.com/termsOfServie.pdf", UriKind.Absolute),
+                    Contact = new OpenApiContact
+                    {
+                        Name = "Songify Support",
+                        Email = "project.codingit@gmail.com",
+                        Url = new Uri("https://projectcoding-it.com", UriKind.Absolute)
+                    }
+                });
+
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                c.IncludeXmlComments(xmlPath);
             });
 
             services.AddAutoMapper(typeof(Startup));
