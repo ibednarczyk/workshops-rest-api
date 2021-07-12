@@ -1,9 +1,14 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,18 +42,53 @@ namespace Songify.Simple
             services.Scan(scan => scan.FromAssemblyOf<Startup>()
                 .AddClasses(@class => @class.AssignableTo<IRepository>())
                 .AsImplementedInterfaces());
-            
-            services.AddControllers(options => 
-            {
-                options.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParametersTransformer()));
-            })
+
+            services.AddControllers(options =>
+                {
+                    options.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParametersTransformer()));
+                })
                 .AddNewtonsoftJson(x =>
                 {
                     x.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                     x.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                     x.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
                     x.SerializerSettings.Converters.Add(new StringEnumConverter());
-                });
+                })
+
+                .ConfigureApiBehaviorOptions(setupAction =>
+                    setupAction.InvalidModelStateResponseFactory = context =>
+                    {
+                        var problemDetailsFactory =
+                            context.HttpContext.RequestServices.GetRequiredService<ProblemDetailsFactory>();
+                        var problemDetails =
+                            problemDetailsFactory.CreateValidationProblemDetails(context.HttpContext,
+                                context.ModelState);
+
+                        problemDetails.Detail = "See the error field for details";
+                        problemDetails.Instance = context.HttpContext.Request.Path;
+
+                        var actionExecutingContext = context as ActionExecutingContext;
+                        if ((context.ModelState.ErrorCount > 0) && (actionExecutingContext?.ActionArguments.Count() ==
+                                                                    context.ActionDescriptor.Parameters.Count))
+                        {
+                            problemDetails.Type = "http://songify.com/modelvalidationproblem";
+                            problemDetails.Status = StatusCodes.Status422UnprocessableEntity;
+                            problemDetails.Title = "One or more validation errors occurred";
+
+                            return new UnprocessableEntityObjectResult(problemDetails)
+                            {
+                                ContentTypes = {"application/problem+json"}
+                            };
+                        }
+
+                        problemDetails.Status = StatusCodes.Status400BadRequest;
+                        problemDetails.Title = "One or more errors on input data occurred";
+
+                        return new BadRequestObjectResult(problemDetails)
+                        {
+                            ContentTypes = {"application/problem+json"}
+                        };
+                    });
 
             services.AddSwaggerGen(c =>
             {
