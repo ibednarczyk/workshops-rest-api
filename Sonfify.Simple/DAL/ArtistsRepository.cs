@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Songify.Simple.Dtos.ResourceParameters;
+using Songify.Simple.Helpers;
 using Songify.Simple.Models;
 
 namespace Songify.Simple.DAL
@@ -33,6 +35,12 @@ namespace Songify.Simple.DAL
         public void Update(Artist model)
         {
             _context.Entry(model).State = EntityState.Modified;
+        }
+
+        public Task<PagedList<Artist>> GetArtists(ArtistResourceParameter parameter)
+        {
+            var collection = _context.Artists.AsQueryable();
+            return PagedList<Artist>.Create(collection, parameter.PageNumber, parameter.PageSize);
         }
     }
 }

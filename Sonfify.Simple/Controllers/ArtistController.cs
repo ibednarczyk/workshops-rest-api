@@ -1,9 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using System.Text.Json;
+using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Songify.Simple.DAL;
 using Songify.Simple.Dtos;
+using Songify.Simple.Dtos.ResourceParameters;
+using Songify.Simple.Helpers;
 using Songify.Simple.Models;
 
 namespace Songify.Simple.Controllers
@@ -63,6 +66,33 @@ namespace Songify.Simple.Controllers
             }
 
             return Ok(artist);
+        }
+
+        /// <summary>
+        /// Gets list of Artists
+        /// </summary>
+        /// <param name="parameter">Artist resource parameter</param>
+        /// <returns>List of artists</returns>
+        /// <response code="200">Return existing artists entities</response>
+        [HttpGet]
+        [Produces(System.Net.Mime.MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(PagedList<Artist>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetArtists([FromQuery]ArtistResourceParameter parameter)
+        {
+            PagedList<Artist> listOfArtists = await _repository.GetArtists(parameter);
+
+            var paginationMetadata = new
+            {
+                totalCount = listOfArtists.TotalCount,
+                totalPages = listOfArtists.TotalPages,
+                currentPage = listOfArtists.CurrentPage,
+                pageSize = listOfArtists.PageSize
+            };
+
+            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
+
+            return Ok(listOfArtists);
         }
 
         /// <summary>
